@@ -682,13 +682,16 @@ class MPVController: NSObject {
     withUnsafeMutablePointer(to: &openGLInitParams) { openGLInitParams in
       var advanced: CInt = 1
       withUnsafeMutablePointer(to: &advanced) { advanced in
-        var params = [
-          mpv_render_param(type: MPV_RENDER_PARAM_API_TYPE, data: apiType),
-          mpv_render_param(type: MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, data: openGLInitParams),
-          mpv_render_param(type: MPV_RENDER_PARAM_ADVANCED_CONTROL, data: advanced),
-          mpv_render_param()
-        ]
-        chkErr(mpv_render_context_create(&mpvRenderContext, mpv, &params))
+        "gpu-next".withCString { renderBackend in
+          var params = [
+            mpv_render_param(type: MPV_RENDER_PARAM_API_TYPE, data: apiType),
+            mpv_render_param(type: MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, data: openGLInitParams),
+            mpv_render_param(type: MPV_RENDER_PARAM_ADVANCED_CONTROL, data: advanced),
+            mpv_render_param(type: MPV_RENDER_PARAM_BACKEND, data: UnsafeMutableRawPointer(mutating: renderBackend)),
+            mpv_render_param()
+          ]
+          chkErr(mpv_render_context_create(&mpvRenderContext, mpv, &params))
+        }
       }
       openGLContext = CGLGetCurrentContext()
       mpv_render_context_set_update_callback(mpvRenderContext!, mpvUpdateCallback, mutableRawPointerOf(obj: player.mainWindow.videoView.videoLayer))
